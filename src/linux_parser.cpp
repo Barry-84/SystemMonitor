@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "linux_parser.h"
 
@@ -67,32 +68,121 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+// Linux stores memory utilization for the process in proc/[pid]/status
+float LinuxParser::MemoryUtilization() { 
+  string line;
+  string key;
+  string valueMemTotal;
+  string valueMemFree;
+  std::ifstream stream(kProcDirectory + kMeminfoFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    linestream >> key >> valueMemTotal;
+
+    std::getline(stream, line);
+    std::istringstream linestream2(line);
+    linestream2 >> key >> valueMemFree;
+
+    // Memory utilization = (MemTotal - MemFree) / MemTotal
+    return (std::stof(valueMemTotal) - std::stof(valueMemFree)) / std::stof(valueMemTotal);
+  }
+  return 0.0;
+}
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+// Linux stores the process up time in /proc/[pid]/status
+long LinuxParser::UpTime() {
+  string line;
+  string seconds_up = "0";
+  std::ifstream inputfilestream(kProcDirectory + kUptimeFilename);
+  if (inputfilestream.is_open()) {
+    std::getline(inputfilestream, line);
+    std::istringstream inputstringstream(line);
+    inputstringstream >> seconds_up;
+  }
+  return stol(seconds_up);
+}
 
 // TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+long LinuxParser::Jiffies() { 
+  return ActiveJiffies() + IdleJiffies();
+}
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
 
 // TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
+long LinuxParser::ActiveJiffies() { 
+  // kUser_ + kNice_ + kSystem_ + kIRQ_ + kSoftIRQ_ + kSteal_
+  // It's inefficient calling CpuUtilization() here and also in IdleJiffies(). 
+  // Maybe this is the wrong approach, or there's a better approach at least?
+  vector<string> allJiffies = CpuUtilization();
+  return std::stol(allJiffies[kUser_]) + std::stol(allJiffies[kNice_]) + std::stol(allJiffies[kIRQ_]) + std::stol(allJiffies[kSoftIRQ_]) + std::stol(allJiffies[kSteal_]);
+}
 
 // TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+long LinuxParser::IdleJiffies() { 
+  // kIdle_ + kIOwait_
+  vector<string> allJiffies = CpuUtilization();
+  return std::stol(allJiffies[kIdle_]) + std::stol(allJiffies[kIOwait_]);
+}
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<string> LinuxParser::CpuUtilization() { 
+  string line;
+  string key;
+  vector<string> string_vector;
+  std::ifstream inputfilestream(kProcDirectory + kStatFilename);  
+  if (inputfilestream.is_open()) {
+    std::getline(inputfilestream, line);
+    std::istringstream inputstringstream(line);
+    while (inputstringstream >> key) {
+      // we don't want the sub-string "cpu"
+      if (key != "cpu") {
+        string_vector.push_back(key);
+      }
+    }
+  }
+  return string_vector; 
+}
 
 // TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+int LinuxParser::TotalProcesses() {
+  string line;
+  string key;
+  string number_processes = "0";
+  std::ifstream inputfilestream(kProcDirectory + kStatFilename);
+  if (inputfilestream.is_open()) {
+    while (std::getline(inputfilestream, line)) {
+      std::istringstream linestream(line);
+      linestream >> key;
+      if (key == "processes") {
+        linestream >> number_processes;
+      }
+    }
+  }
+  return std::stoi(number_processes);
+}
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() { 
+  string line;
+  string key;
+  string number_processes = "0";
+  std::ifstream inputfilestream(kProcDirectory + kStatFilename);
+  if (inputfilestream.is_open()) {
+    while (std::getline(inputfilestream, line)) {
+      std::istringstream linestream(line);
+      linestream >> key;
+      if (key == "procs_running") {
+        linestream >> number_processes;
+      }
+    }
+  }
+  return std::stoi(number_processes);
+}
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
