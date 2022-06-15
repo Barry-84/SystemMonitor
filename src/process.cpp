@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "process.h"
+#include "linux_parser.h"
 
 using std::string;
 using std::to_string;
@@ -29,7 +30,11 @@ string Process::Command() { return string(); }
 string Process::Ram() { return string(); }
 
 // TODO: Return the user (name) that generated this process
-string Process::User() { return string(); }
+string Process::User() { 
+    string user = LinuxParser::User(Pid());
+    return user;
+    //return string();
+}
 
 // TODO: Return the age of this process (in seconds)
 long int Process::UpTime() { return 0; }
