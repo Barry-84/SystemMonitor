@@ -3,9 +3,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "process.h"
 #include "linux_parser.h"
+#include "unistd.h"
 
 using std::string;
 using std::to_string;
@@ -21,7 +23,14 @@ void Process::setPID(int pid_in) {
 }
 
 // TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { return 0; }
+float Process::CpuUtilization() { 
+    float totaltime = (float) LinuxParser::ActiveJiffies(Pid());
+    float startime = (float) LinuxParser::UpTime(Pid()); // uptime of the process, measured in "clock ticks"
+    float uptime = (float) LinuxParser::UpTime(); // uptime of the system
+    float hertz = (float) sysconf(_SC_CLK_TCK);
+    float seconds = uptime - (startime / hertz);
+    return (totaltime / hertz) / seconds;
+}
 
 // TODO: Return the command that generated this process
 string Process::Command() { return string(); }

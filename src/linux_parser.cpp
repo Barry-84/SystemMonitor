@@ -111,7 +111,40 @@ long LinuxParser::Jiffies() {
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::ActiveJiffies(int pid) { 
+  string line, field;
+  int const index_utime = 14;
+  int const index_stime = 15;
+  int const index_cutime = 16;
+  int const index_cstime = 17;
+  long utime{0}, stime{0}, cutime{0}, cstime{0};
+  std::ifstream inputfilestream(kProcDirectory + std::to_string(pid) + kStatFilename);
+  if (inputfilestream.is_open()) {
+    std::getline(inputfilestream, line);
+    std::istringstream inputstringstream(line);
+    // have to pull the fields starting from beginning: 1, 2, 3, ... etc.
+    for (int i = 1; i <= index_cstime; i++) {
+      inputstringstream >> field;
+      switch (i) {
+        case index_utime:
+          utime = stol(field);
+          break;
+        case index_stime:
+          stime = stol(field);
+          break;
+        case index_cutime:
+          cutime = stol(field);
+          break;
+        case index_cstime:
+          cstime = stol(field);
+          break;
+        default:
+          break;
+      }
+    }
+  } 
+  return utime + stime + cutime + cstime;
+}
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() { 
@@ -235,4 +268,18 @@ string LinuxParser::User(int pid) {
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::UpTime(int pid) { 
+  // this method returns the process starttime (field no. 22 in /proc/[pid]/stat)
+  string line, field;
+  int const index_starttime = 22;
+  std::ifstream inputfilestream(kProcDirectory + std::to_string(pid) + kStatFilename);
+  if (inputfilestream.is_open()) {
+    std::getline(inputfilestream, line);
+    std::istringstream inputstringstream(line);
+    // have to pull the fields starting from beginning: 1, 2, 3, ... etc.
+    for (int i = 1; i <= index_starttime; i++) {
+      inputstringstream >> field;
+    }
+  } 
+  return stol(field);
+}
