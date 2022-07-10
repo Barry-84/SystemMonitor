@@ -223,7 +223,22 @@ string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Ram(int pid) { 
+  string line, key;
+  string memory = "0";
+  std::ifstream inputfilestream(kProcDirectory + std::to_string(pid) + kStatusFilename);
+  if (inputfilestream.is_open()) {
+    while (std::getline(inputfilestream, line)) {
+      std::istringstream linestream(line);
+      linestream >> key;
+      // find line beginning with "VmSize:"" and return the memory in kB as string
+      if (key == "VmSize:") {
+        linestream >> memory;
+      }
+    }
+  }
+  return memory; 
+}
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
@@ -281,5 +296,7 @@ long LinuxParser::UpTime(int pid) {
       inputstringstream >> field;
     }
   } 
-  return stol(field);
+  // The value in string "field" is the starttime in clock ticks.
+  // Divide by sysconf(_SC_CLK_TCK) to get time in seconds.
+  return stol(field) / sysconf(_SC_CLK_TCK);
 }

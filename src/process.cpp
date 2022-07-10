@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+#include <cmath>
+
 #include "process.h"
 #include "linux_parser.h"
 #include "unistd.h"
@@ -36,7 +38,13 @@ float Process::CpuUtilization() {
 string Process::Command() { return string(); }
 
 // TODO: Return this process's memory utilization
-string Process::Ram() { return string(); }
+string Process::Ram() {
+    /* LinuxParser::Ram(int pid) returns this process's memory utilization in kB.
+       So dividing by 2^10 gives us MB.
+    */
+    long megaBytes = stol(LinuxParser::Ram(Pid())) / pow(2, 10);
+    return to_string(megaBytes);
+}
 
 // TODO: Return the user (name) that generated this process
 string Process::User() { 
@@ -46,7 +54,11 @@ string Process::User() {
 }
 
 // TODO: Return the age of this process (in seconds)
-long int Process::UpTime() { return 0; }
+long int Process::UpTime() { 
+    // Note: "long and long int are identical" (from stackoverflow)
+    // LinuxParser::UpTime(int pid) returns long and this method returns long int.
+    return LinuxParser::UpTime(Pid());
+}
 
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
