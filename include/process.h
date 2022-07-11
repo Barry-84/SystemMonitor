@@ -20,6 +20,7 @@ class Process {
   // TODO: Declare any necessary private members
  private:
     int pid{0};
+    float process_totaltime_old{0}, process_uptime_old{0};
 };
 
 #endif

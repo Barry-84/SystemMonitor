@@ -296,7 +296,7 @@ long LinuxParser::UpTime(int pid) {
       inputstringstream >> field;
     }
   } 
-  // The value in string "field" is the starttime in clock ticks.
+  // The value in string "field" is the starttime in clock ticks (jiffies).
   // Divide by sysconf(_SC_CLK_TCK) to get time in seconds.
   return stol(field) / sysconf(_SC_CLK_TCK);
 }
