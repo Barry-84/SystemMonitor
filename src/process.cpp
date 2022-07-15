@@ -16,12 +16,16 @@ using std::to_string;
 using std::vector;
 
 // TODO: Return this process's ID
-int Process::Pid() { 
+int Process::Pid() const { 
     return pid;
 }
 
 void Process::setPID(int pid_in) {
     pid = pid_in;
+}
+
+float Process::getCpuLoad() const {
+    return cpu_load;
 }
 
 // TODO: Return this process's CPU utilization
@@ -40,7 +44,7 @@ float Process::CpuUtilization() {
     process_uptime_old = process_uptime;
 
     return cpu_load;
-    
+ 
 }
 
 // TODO: Return the command that generated this process
@@ -73,4 +77,6 @@ long int Process::UpTime() {
 
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const { return true; }
+bool Process::operator<(Process const& a) const {
+    return this->getCpuLoad() < a.getCpuLoad();
+}

@@ -19,6 +19,7 @@ Processor& System::Cpu() { return cpu_; }
 
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes() { 
+
     // First get the IDs of all the processes
     vector<int> processPIDs = LinuxParser::Pids();
     for (int pid : processPIDs) {
@@ -29,6 +30,10 @@ vector<Process>& System::Processes() {
         // push the process to the vector of processes
         processes_.push_back(process);
     }
+
+    // sort the processes according to cpu utilization
+    std::sort(processes_.begin(), processes_.end());
+
     return processes_;
 }
 

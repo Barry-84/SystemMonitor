@@ -224,7 +224,6 @@ string LinuxParser::Command(int pid) {
   std::ifstream inputfilestream(kProcDirectory + std::to_string(pid) + kCmdlineFilename);
   if (inputfilestream.is_open()) {
     std::getline(inputfilestream, line);
-    // std::cout << line << "\n";
     // return the entire line
     return line;
   }
