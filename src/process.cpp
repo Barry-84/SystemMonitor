@@ -28,8 +28,7 @@ float Process::getCpuLoad() const {
     return cpu_load;
 }
 
-// TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { 
+void Process::CalcCpuLoad() {
     // total time CPU has been busy with this process
     float process_totaltime = (float) LinuxParser::ActiveJiffies(Pid()) / (float) sysconf(_SC_CLK_TCK);  
     // start time of the process in seconds
@@ -38,14 +37,34 @@ float Process::CpuUtilization() {
     float system_uptime = (float) LinuxParser::UpTime(); 
     float process_uptime = system_uptime - process_startime;
     
+    cpu_load = process_totaltime / process_uptime;
+}
+
+// TODO: Return this process's CPU utilization
+float Process::CpuUtilization() { 
+    /*
+    // total time CPU has been busy with this process
+    float process_totaltime = (float) LinuxParser::ActiveJiffies(Pid()) / (float) sysconf(_SC_CLK_TCK);  
+    // start time of the process in seconds
+    float process_startime = (float) LinuxParser::UpTime(Pid()); 
+    // uptime of the system in seconds
+    float system_uptime = (float) LinuxParser::UpTime(); 
+    float process_uptime = system_uptime - process_startime;
+    
+    float cpu_load = process_totaltime / process_uptime;
+    */
+    return cpu_load;
+
+    /*
     float cpu_load = (process_totaltime - process_totaltime_old) / (process_uptime - process_uptime_old);
     
     process_totaltime_old = process_totaltime;
     process_uptime_old = process_uptime;
 
     return cpu_load;
- 
+    */
 }
+
 
 // TODO: Return the command that generated this process
 string Process::Command() { 
@@ -78,5 +97,5 @@ long int Process::UpTime() {
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
 bool Process::operator<(Process const& a) const {
-    return this->getCpuLoad() < a.getCpuLoad();
+    return a.getCpuLoad() < this->getCpuLoad();
 }
