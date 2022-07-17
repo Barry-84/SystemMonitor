@@ -7,7 +7,6 @@
 using std::string;
 using std::vector;
 
-// TODO: Return the aggregate CPU utilization
 float Processor::Utilization() {
     /* reporting the current utilization of the processor, 
        rather than the long-term average utilization since
