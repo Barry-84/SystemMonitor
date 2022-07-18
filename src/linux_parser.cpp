@@ -72,24 +72,15 @@ vector<int> LinuxParser::Pids() {
 
 // Linux stores memory utilization for the process in proc/[pid]/status
 float LinuxParser::MemoryUtilization() { 
-  string line;
-  string key;
-  string valueMemTotal;
-  string valueMemFree;
-  std::ifstream stream(kProcDirectory + kMeminfoFilename);
-  if (stream.is_open()) {
-    std::getline(stream, line);
-    std::istringstream linestream(line);
-    linestream >> key >> valueMemTotal;
+  /* Using template here which could potentially also be used elsewhere to
+     reduce code repetition overall. */
+  string memTotal = "MemTotal:";
+  string memFree = "MemFree:";
+  float valueMemTotal = findValueByKey<float>(memTotal, kMeminfoFilename);
+  float valueMemFree = findValueByKey<float>(memFree, kMeminfoFilename);
 
-    std::getline(stream, line);
-    std::istringstream linestream2(line);
-    linestream2 >> key >> valueMemFree;
-
-    // Memory utilization = (MemTotal - MemFree) / MemTotal
-    return (std::stof(valueMemTotal) - std::stof(valueMemFree)) / std::stof(valueMemTotal);
-  }
-  return 0.0;
+  // Memory utilization = (MemTotal - MemFree) / MemTotal
+  return (valueMemTotal - valueMemFree) / valueMemTotal;
 }
 
 long LinuxParser::UpTime() {
@@ -215,15 +206,9 @@ int LinuxParser::RunningProcesses() {
 }
 
 string LinuxParser::Command(int pid) { 
-  string line; 
-  std::ifstream inputfilestream(kProcDirectory + std::to_string(pid) + kCmdlineFilename);
-  if (inputfilestream.is_open()) {
-    std::getline(inputfilestream, line);
-    // return the entire line
-    return line;
-  }
-  
-  return string();
+  /* Using template here which could potentially also be used elsewhere to
+     reduce code repetition overall. */
+  return getValueOfFile<string>(std::to_string(pid) + kCmdlineFilename);
 }
 
 
