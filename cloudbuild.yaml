@@ -1,0 +1,30 @@
+steps:
+  - name: 'ubuntu'
+    args: ['bash', './make-dockerfiles.sh']
+    id: 'prebuild'
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    secretEnv: ['NPM_TOKEN', 'GIT_AUTH']
+    args: ['-c', 'docker build -f target/Dockerfile.cpu --build-arg NPM_TOKEN=$$NPM_TOKEN --build-arg GIT_AUTH=$$GIT_AUTH -t us.gcr.io/workspaces-162222/webterminal_compute_cpu:$COMMIT_SHA -t us.gcr.io/workspaces-162222/webterminal_compute_cpu:latest .']
+    waitFor: ['prebuild']
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    secretEnv: ['NPM_TOKEN', 'GIT_AUTH']
+    args: ['-c', 'docker build -f target/Dockerfile.gpu --build-arg NPM_TOKEN=$$NPM_TOKEN --build-arg GIT_AUTH=$$GIT_AUTH -t us.gcr.io/workspaces-162222/webterminal_compute_gpu:$COMMIT_SHA -t us.gcr.io/workspaces-162222/webterminal_compute_gpu:latest .']
+    waitFor: ['prebuild']
+
+secrets:
+  - kmsKeyName: projects/workspaces-162222/locations/global/keyRings/nebula-docker-builds/cryptoKeys/nebula-docker-build-key
+    secretEnv:
+      NPM_TOKEN: CiQAI7EwSN+gxtW5oIa4vWIjopRolSgeY0PhLzXCewpMlqEulCESTgBoYVQ4uRkSbH7Ng9seu0tzDVhprWyEsBALFqeYfHx+2oa+0bMZRO7SSPemqmZ+oe8OkVXJXG4eFFVEM8SmtRYLHDRVL+7jNnUnMd1AHg==
+      GIT_AUTH: CiQAI7EwSAJv2j0QZuTdOe/LFF2Knn8/3M4iJzYBYSFM32u+x1ISUgBoYVQ4TY0R0wvhCyg/9NHeWBWJ5mEF1wppCqdCdGiZ1K5qKb8EENOZA7Xhe3Sz20UkMA7CcvclvJ3FHJL0ZJ2sweipA2jn4hDDE61Hx1UguLM=
+
+images:
+  - 'us.gcr.io/workspaces-162222/webterminal_compute_cpu:$COMMIT_SHA'
+  - 'us.gcr.io/workspaces-162222/webterminal_compute_cpu:latest'
+  - 'us.gcr.io/workspaces-162222/webterminal_compute_gpu:$COMMIT_SHA'
+  - 'us.gcr.io/workspaces-162222/webterminal_compute_gpu:latest'
+timeout: '6500s'
+options:
+  diskSizeGb: 300
+  machineType: 'N1_HIGHCPU_32'

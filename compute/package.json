@@ -1,0 +1,42 @@
+{
+  "name": "@udacity/web-terminal",
+  "description": "A server to connect a remote IDE to the host machine",
+  "version": "2.1.0",
+  "author": "Udacity",
+  "license": "ISC",
+  "repository": "https://github.com/udacity/web-terminal",
+  "engines": {
+    "node": "8.x",
+    "npm": "5.x"
+  },
+  "scripts": {
+    "test": "mocha ./tests/*.js"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.0",
+    "body-parser": "^1.15.1",
+    "bunyan": "^1.8.1",
+    "express": "^4.16.0",
+    "express-bunyan-logger": "^1.3.0",
+    "express-ws": "^3.0.0",
+    "fs.extra": "^1.3.2",
+    "livedb": "^0.5.13",
+    "node-pty": "^0.6.8",
+    "nodemon": "^1.12.1",
+    "normalize-newline": "^3.0.0",
+    "randomstring": "^1.1.5",
+    "redux": "^3.5.2",
+    "request": "^2.3.4",
+    "request-promise": "^4.2.2",
+    "sha3": "^1.2.0",
+    "share": "^0.7.40",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "del": "^3.0.0",
+    "mocha": "^2.5.3",
+    "should": "^9.0.0",
+    "ws": "^3.2.0"
+  },
+  "main": "server.js"
+}

@@ -1,0 +1,10 @@
+version: '2'
+services:
+  compute:
+    extends:
+      file: docker-compose.yml
+      service: compute
+    environment:
+      COMPUTE_NODE_OPTIONS: "--inspect=0.0.0.0:9229"
+    ports:
+      - "9229:9229"

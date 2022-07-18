@@ -1,0 +1,100 @@
+# Build container so NPM_TOKEN does not appear in history on student vms
+FROM node:8
+ARG NPM_TOKEN
+ARG GIT_AUTH
+
+WORKDIR /opt/web-terminal
+
+# Get node deps
+ADD compute/package.json compute/
+ADD compute/.npmrc compute/
+# Build node server dependencies
+ENV NODE_ENV production
+RUN cd compute && npm install
+# Add node server code
+ADD compute compute
+
+# Clone swift workspace repo
+WORKDIR /opt
+RUN git clone https://$GIT_AUTH@github.com/udacity/workspace-swift-playground.git && \
+    rm -rf /opt/workspace-swift-playground/.git
+
+# Install swift workspace dependencies
+WORKDIR /opt/workspace-swift-playground
+RUN npm install
+
+# Clone turtle workspace repo 
+WORKDIR /opt
+RUN git clone https://$GIT_AUTH@github.com/udacity/workspace-turtle-support.git && \
+    rm -rf /opt/workspace-turtle-support/.git
+
+# Install turtle workspace dependencies
+WORKDIR /opt/workspace-turtle-support
+RUN npm install
+
+# Setup runtime env
+FROM us.gcr.io/workspaces-162222/jupyter-uworkspace-CPU_OR_GPU
+
+# Install system deps
+RUN apt-get -y update \
+  && apt-get -y --no-install-recommends install unzip zip vim psmisc xz-utils htop \
+     ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 emacs less \
+     libpython-dev cmake libsuitesparse-dev libeigen3-dev libsdl1.2-dev doxygen graphviz \
+  && apt-get -y autoremove && apt-get -y autoclean
+
+WORKDIR /opt/web-terminal
+
+# Install c++ nd dependencies
+ADD compute/docker/c++.sh compute/docker/c++.sh
+RUN bash compute/docker/c++.sh
+
+# Install swift
+ADD compute/docker/swift.sh compute/docker/swift.sh
+RUN bash compute/docker/swift.sh
+ENV PATH=$PATH:/opt/swift/swift-4.2.1-RELEASE-ubuntu16.04/usr/bin
+
+# Install Postgres, used by DEND
+ADD compute/docker/postgres.sh compute/docker/postgres.sh
+RUN bash compute/docker/postgres.sh
+
+# Install Cassandra, used by DEND
+ADD compute/docker/cassandra.sh compute/docker/cassandra.sh
+RUN bash compute/docker/cassandra.sh
+
+# Install Airflow, used by DEND
+ADD compute/docker/airflow/ /opt/airflow/
+RUN bash /opt/airflow/install.sh
+# Set airflow start script permission, so that virtual pool host can run it outside web-terminal container.
+RUN chmod a+x /opt/airflow/start-services.sh
+# Setup airflow db using postgres. Airflow expects config file to be in /root
+ADD compute/docker/airflow/airflow.cfg /root/airflow/airflow.cfg
+RUN bash /opt/airflow/init_db.sh
+
+# Install node
+ADD compute/docker/node.sh compute/docker/node.sh
+RUN bash compute/docker/node.sh
+
+# Install go
+ADD compute/docker/go.sh compute/docker/go.sh
+RUN bash compute/docker/go.sh
+
+ENV GOPATH /opt/web-terminal/gocode
+ADD gocode gocode
+RUN cd gocode/src/web-terminal-proxy/proxy && go get . && go install
+
+# Get go proxy
+RUN cp gocode/bin/proxy goproxy
+
+# COPY node server code and swift playground from build container
+COPY --from=0 /opt/web-terminal/compute /opt/web-terminal/compute
+COPY --from=0 /opt/workspace-swift-playground /opt/workspace-swift-playground
+COPY --from=0 /opt/workspace-turtle-support /opt/workspace-turtle-support
+
+# Expose proxy ports
+EXPOSE 8282
+EXPOSE 443
+EXPOSE 4001
+
+# Start daemons
+WORKDIR /opt/web-terminal
+CMD ./goproxy & ./compute/node_modules/.bin/nodemon $COMPUTE_NODE_OPTIONS compute/main.js

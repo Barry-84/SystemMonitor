@@ -1,0 +1,15 @@
+version: '2'
+services:
+  compute:
+    build:
+      dockerfile: target/Dockerfile.cpu
+      context: .
+      args:
+        NPM_TOKEN: "$NPM_TOKEN"
+        GIT_AUTH: "$GIT_AUTH"
+    volumes:
+      - "./compute:/opt/web-terminal/compute"
+      - "/opt/web-terminal/compute/node_modules"
+    ports:
+      - "8282:443"
+      - "3000:3000"
